@@ -360,9 +360,12 @@ oRingTable = [
 
 function GetAllORings() = oRingTable;
 
+// Returns the vector of o-ring information given its dash number
 function GetORingByDashNo(dashno) =
     [ for (row = oRingTable) if (row[0] == dashno) row ][0];
 
+// Returns the vector of o-ring information with the next-largest given internal diameter
+// Optionally specify desired series or cross section range
 function GetNextLargestORingByID(minIDmm, series = -1, minCSmm = 0, maxCSmm = 100) =
     let (candidates = [ for (row = oRingTable) if (
         row[5] >= minIDmm
@@ -376,6 +379,7 @@ function GetNextLargestORingByID(minIDmm, series = -1, minCSmm = 0, maxCSmm = 10
     let (candidatesWithMinCS = [ for (row = candidatesWithMinID) if (row[7] == minCS) row ])
     candidatesWithMinCS[0];
 
+// Pretty-prints o-ring vector
 function ORingToStr(row) = str(
         "ORing #",
         row[0] < 10 ? "0" : "",
@@ -392,4 +396,36 @@ function ORingToStr(row) = str(
         "mm)"
     );
 
-echo(ORingToStr(GetNextLargestORingByID(15, 1)));
+// Get parameters for a basic o-ring sealing gland.
+// For argument values, see https://www.marcorubber.com/o-ring-groove-design-considerations.htm
+// Returned values are a vector containing:
+// [ grooveID, grooveOD, grooveDepth ]
+function GetORingGlandParameters(oring, compression = 0.2, stretch = 0, fill = 0.75) =
+    let (grooveID = oring[5] * (1 + stretch))
+    let (grooveDepth = oring[7] * (1 - compression))
+    let (grooveWidth = PI * pow(oring[7] / 2, 2) / fill / grooveDepth)
+    [
+        grooveID,
+        grooveID + grooveWidth * 2,
+        grooveDepth
+    ];
+
+// Produces the shape of a basic o-ring sealing gland.  Should be subtracted from a shape with difference().
+module ORingGland(glandparams, chamferFrac = 0.2) {
+    grooveID = glandparams[0];
+    grooveOD = glandparams[1];
+    grooveWidth = (grooveOD - grooveID) / 2;
+    grooveDepth = glandparams[2];
+    chamfer = chamferFrac * grooveDepth;
+    rotate_extrude()
+        translate([grooveID/2, 0])
+            polygon([
+                [-chamfer, 0],
+                [grooveWidth + chamfer, 0],
+                [grooveWidth, -chamfer],
+                [grooveWidth, -grooveDepth],
+                [0, -grooveDepth],
+                [0, -chamfer]
+            ]);
+};
+
