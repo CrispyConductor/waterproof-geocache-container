@@ -400,9 +400,9 @@ function ORingToStr(row) = str(
 // For argument values, see https://www.marcorubber.com/o-ring-groove-design-considerations.htm
 // Returned values are a vector containing:
 // [ grooveID, grooveOD, grooveDepth ]
-function GetORingGlandParameters(oring, compression = 0.2, stretch = 0, fill = 0.75) =
+function GetORingGlandParameters(oring, compression = 0.2, stretch = 0, fill = 0.75, clearance = 0) =
     let (grooveID = oring[5] * (1 + stretch))
-    let (grooveDepth = oring[7] * (1 - compression))
+    let (grooveDepth = oring[7] * (1 - compression) - clearance)
     let (grooveWidth = PI * pow(oring[7] / 2, 2) / fill / grooveDepth)
     [
         grooveID,
