@@ -136,6 +136,8 @@ dessicantThreadDiameter = capThreadDiameter - 2*containerThreadPitch - 2*dessica
 dessicantThreadNumTurns = 2;
 dessicantThreadLength = dessicantThreadNumTurns * containerThreadPitch;
 dessicantCapHeight = dessicantThreadLength;
+dessicantPocketCapShoulder = 1;
+dessicantPocketInternalRadius = dessicantThreadDiameter/2-containerThreadPitch-dessicantPocketCapShoulder;
 
 module Cap() {
     extraCapRadiusWithClips = 2;
@@ -159,11 +161,10 @@ module Cap() {
         
         // Dessicant pocket
         dessicantPocketZ = floorThick;
-        dessicantPocketCapShoulder = 1;
         if (includeDessicantPocket)
             translate([0, 0, dessicantPocketZ])
                 union() {
-                    cylinder(r=dessicantThreadDiameter/2-containerThreadPitch-dessicantPocketCapShoulder, h=1000);
+                    cylinder(r=dessicantPocketInternalRadius, h=1000);
                     translate([0, 0, dessicantPocketHeight - dessicantThreadLength])
                         metric_thread(
                             diameter=dessicantThreadDiameter,
@@ -232,5 +233,36 @@ module Cap() {
             };
 };
 
+module DessicantCap() {
+    perforationDiameter = 1.5;
+    perforationSpacing = perforationDiameter * 3;
+    difference() {
+        // Body of cap
+        metric_thread(
+            diameter=dessicantThreadDiameter-extraThreadDiameterClearance,
+            pitch=containerThreadPitch,
+            length=dessicantCapHeight,
+            internal=false,
+            angle=45
+        );
+        // Slot for turning
+        slotWidth = min(3, dessicantThreadDiameter/5);
+        slotLength = (dessicantThreadDiameter - containerThreadPitch*2) * 0.6;
+        slotDepth = dessicantCapHeight * 0.7;
+        translate([-slotWidth/2, -slotLength/2, dessicantCapHeight-slotDepth])
+            cube([slotWidth, slotLength, 1000]);
+        // Perforations
+        for (r = [dessicantPocketInternalRadius-perforationDiameter : -perforationSpacing : perforationSpacing]) {
+            numPerforations = floor(2*PI*r / perforationSpacing);
+            startAngle = rands(-360, 0, 1)[0];
+            for (a = [startAngle : 360/numPerforations : startAngle+359])
+                rotate([0, 0, a])
+                    translate([r, 0, 0])
+                        cylinder(r=perforationDiameter/2, h=1000);
+        };
+    };
+};
+
 //Container();
-Cap();
+//Cap();
+DessicantCap();
