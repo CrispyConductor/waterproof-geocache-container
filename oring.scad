@@ -474,7 +474,8 @@ module ORingGland(glandparams, chamferFrac = 0.2, bite=undef) {
                     [0, -chamfer]
                 ]);
         if (bite != undef && bite[3] > 0)
-            ORingBite(bite);
+            translate([0, 0, -grooveDepth])
+                ORingBite(bite);
     };
 };
 
