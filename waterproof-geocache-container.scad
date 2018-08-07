@@ -37,6 +37,9 @@ extraThreadDiameterClearance = 0.6;
 
 useORingBites = true;
 
+includeDessicantPocket = true;
+dessicantPocketWallThick = 2;
+
 $fa = 3;
 $fs = 0.2;
 
@@ -126,24 +129,54 @@ module Container() {
     };
 };
 
+capThreadLength = containerThreadLength - 1;
+capThreadDiameter = containerThreadOuterDiameter-extraThreadDiameterClearance;
+dessicantPocketHeight = capTopHeight + capThreadLength - floorThick;
+dessicantThreadDiameter = capThreadDiameter - 2*containerThreadPitch - 2*dessicantPocketWallThick;
+dessicantThreadNumTurns = 2;
+dessicantThreadLength = dessicantThreadNumTurns * containerThreadPitch;
+dessicantCapHeight = dessicantThreadLength;
+
 module Cap() {
     extraCapRadiusWithClips = 2;
     capRadius = (numClips > 0) ? containerTopRadius + clipArmContainerClearance + clipArmThick + extraCapRadiusWithClips : containerTopRadius;
     
-    // Base
-    cylinder(h=capTopHeight, r=capRadius);
+    difference() {
+        union() {
+            // Base
+            cylinder(h=capTopHeight, r=capRadius);
+             // Threads
+            translate([0, 0, capTopHeight])
+                metric_thread(
+                    diameter=capThreadDiameter,
+                    pitch=containerThreadPitch,
+                    length=capThreadLength,
+                    internal=false,
+                    angle=45,
+                    leadin=1
+                );
+        };
+        
+        // Dessicant pocket
+        dessicantPocketZ = floorThick;
+        dessicantPocketCapShoulder = 1;
+        if (includeDessicantPocket)
+            translate([0, 0, dessicantPocketZ])
+                union() {
+                    cylinder(r=dessicantThreadDiameter/2-containerThreadPitch-dessicantPocketCapShoulder, h=1000);
+                    translate([0, 0, dessicantPocketHeight - dessicantThreadLength])
+                        metric_thread(
+                            diameter=dessicantThreadDiameter,
+                            pitch=containerThreadPitch,
+                            length=dessicantThreadLength + containerThreadPitch,
+                            internal=true,
+                            angle=45
+                        );
+                };
+    };
+    
     // Knurls
     knurl(capTopHeight, capRadius*2);
-    // Threads
-    translate([0, 0, capTopHeight])
-        metric_thread(
-            diameter=containerThreadOuterDiameter-extraThreadDiameterClearance,
-            pitch=containerThreadPitch,
-            length=containerThreadLength-1,
-            internal=false,
-            angle=45,
-            leadin=1
-        );
     // O-ring bites
     if (useORingBites)
         for (i = [0 : numORings-1])
