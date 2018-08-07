@@ -41,6 +41,7 @@ $fs = 0.2;
 use <threads.scad>
 use <oring.scad>
 use <knurl.scad>
+use <rotate_extrude.scad>
 
 compartmentRadius = compartmentDiameter / 2;
 
@@ -55,6 +56,13 @@ oRingSurfaceClearance = 0.4;
 useORingBites = true;
 oRingBiteHeight = 0.2;
 
+numClips = 6;
+clipWidth = 10;
+clipArmThick = 2;
+clipArmMinLength = 15; // length to the start of the clip protrusion; actually length is containerTopThick
+clipArmContainerClearance = 0.6;
+clipDeflectionAngle = 5;
+
 // Returns O-ring information for the given o-ring number (starting at 0)
 // Return format: [ ORingData, GlandData, BiteData ]
 function GetContainerORingInfo(oringNum) =
@@ -68,11 +76,16 @@ function GetContainerORingInfo(oringNum) =
     let (gland = GetORingGlandParameters(oring, clearance=oRingSurfaceClearance, bite=bite))
     [ oring, gland, bite ];
 
-// Calculate the radius of the top part of the container from the OD of the largest O-ring groove
-containerTopRadius = GetContainerORingInfo(numORings - 1)[1][1] / 2 + oRingGrooveMinBufferWidth;
-
 // Calculate the thickness of the top part of the container from the maximum depth of any of the O-ring grooves
-containerTopThick = max([ for (i = [0 : numORings - 1]) GetContainerORingInfo(i)[1][2] ]) + containerTopMinThick;
+containerTopThick_ord = max([ for (i = [0 : numORings - 1]) GetContainerORingInfo(i)[1][2] ]) + containerTopMinThick;
+containerTopThick = (numClips > 0) ? max(containerTopThick_ord, clipArmMinLength) : containerTopThick_ord;
+
+clipProtrusion = (containerTopThick * tan(clipDeflectionAngle) + clipArmContainerClearance / cos(clipDeflectionAngle)) / (1 - tan(clipDeflectionAngle));
+
+// Calculate the radius of the top part of the container from the OD of the largest O-ring groove
+containerTopRadius_ord = GetContainerORingInfo(numORings - 1)[1][1] / 2 + oRingGrooveMinBufferWidth;
+containerTopRadius_clip = containerOuterRadius + clipProtrusion - clipArmContainerClearance;
+containerTopRadius = max(containerTopRadius_ord, containerTopRadius_clip);
 
 // Print out o-ring info
 for (i = [0 : numORings - 1])
@@ -113,10 +126,13 @@ module Container() {
 };
 
 module Cap() {
+    extraCapRadiusWithClips = 2;
+    capRadius = (numClips > 0) ? containerTopRadius + clipArmContainerClearance + clipArmThick + extraCapRadiusWithClips : containerTopRadius;
+    
     // Base
-    cylinder(h=capTopHeight, r=containerTopRadius);
+    cylinder(h=capTopHeight, r=capRadius);
     // Knurls
-    knurl(capTopHeight, containerTopRadius*2);
+    knurl(capTopHeight, capRadius*2);
     // Threads
     translate([0, 0, capTopHeight])
         metric_thread(
@@ -132,6 +148,54 @@ module Cap() {
         for (i = [0 : numORings-1])
             translate([0, 0, capTopHeight])
                 ORingBite(GetContainerORingInfo(i)[2]);
+    
+    // Clip shroud and clips
+    clipPointHeight = 1;
+    clipShroudGapClearance = 1;
+    clipArmFullLength = containerTopThick + 2 * clipProtrusion + clipPointHeight;
+    clipArmOffsetX = containerTopRadius + clipArmContainerClearance;
+    clipSpanAngle = clipWidth / (2 * PI * clipArmOffsetX) * 360;
+    clipShroudGapSpanAngle = (clipWidth + 2 * clipShroudGapClearance) / (2 * PI * clipArmOffsetX) * 360;
+    clipAngleSpacing = 360 / numClips;
+    clipArmTopThick = clipArmThick / 2;
+    clipBaseBevelHeight = min(extraCapRadiusWithClips, containerTopThick / 10);
+    if (numClips > 0)
+        translate([0, 0, capTopHeight])
+            union() {
+                difference() {
+                    // Clip shroud, same thickness as clip arms
+                    rotate_extrude()
+                        translate([clipArmOffsetX, 0])
+                            polygon([
+                                [0, 0],
+                                [clipArmThick + extraCapRadiusWithClips, 0],
+                                [clipArmThick, clipBaseBevelHeight],
+                                [clipArmThick, clipArmFullLength],
+                                [0, clipArmFullLength]
+                            ]);
+                    // Gaps in the clip shroud
+                    for (i = [0 : numClips - 1])
+                        rotate([0, 0, i * clipAngleSpacing - clipShroudGapSpanAngle/2])
+                            rotate_extrude2(angle=clipShroudGapSpanAngle)
+                                square([1000, 1000]);
+                };
+                
+                // Clips
+                for (i = [0 : numClips - 1])
+                    rotate([0, 0, i * clipAngleSpacing - clipSpanAngle/2])
+                        rotate_extrude2(angle=clipSpanAngle)
+                            translate([clipArmOffsetX, 0])
+                                polygon([
+                                    [0, 0],
+                                    [clipArmThick + extraCapRadiusWithClips, 0],
+                                    [clipArmThick, clipBaseBevelHeight],
+                                    [clipArmTopThick, clipArmFullLength],
+                                    [0, clipArmFullLength],
+                                    [-clipProtrusion, clipArmFullLength - clipProtrusion],
+                                    [-clipProtrusion, clipArmFullLength - clipProtrusion - clipPointHeight],
+                                    [0, clipArmFullLength - 2*clipProtrusion - clipPointHeight]
+                                ]);
+            };
 };
 
 //Container();
