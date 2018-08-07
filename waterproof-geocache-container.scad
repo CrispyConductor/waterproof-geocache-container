@@ -35,6 +35,8 @@ containerTopMinThick = 2;
 // Extra clearance to add to the diameter of threaded connection
 extraThreadDiameterClearance = 0.6;
 
+useORingBites = true;
+
 $fa = 3;
 $fs = 0.2;
 
@@ -51,13 +53,12 @@ containerInnerRadius = compartmentRadius;
 
 containerThreadOuterDiameter = containerInnerRadius * 2 + containerThreadPitch * 0.3125 * 2;
 
-oRingSurfaceClearance = 0.4;
+oRingSurfaceClearance = 0.2;
 
-useORingBites = true;
 oRingBiteHeight = 0.2;
 
 numClips = 6;
-clipWidth = 10;
+clipWidth = min(10, 2*PI*containerOuterRadius/numClips/2, 2*PI*containerOuterRadius/20);
 clipArmThick = 2;
 clipArmMinLength = 15; // length to the start of the clip protrusion; actually length is containerTopThick
 clipArmContainerClearance = 0.6;
