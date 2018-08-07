@@ -52,17 +52,21 @@ containerThreadOuterDiameter = containerInnerRadius * 2 + containerThreadPitch *
 
 oRingSurfaceClearance = 0.4;
 
+useORingBites = true;
+oRingBiteHeight = 0.2;
+
 // Returns O-ring information for the given o-ring number (starting at 0)
-// Return format: [ ORingData, GlandData ]
+// Return format: [ ORingData, GlandData, BiteData ]
 function GetContainerORingInfo(oringNum) =
     let (desiredID =
         (oringNum <= 0)
         ? (containerInnerRadius + containerThreadPitch/2 + oRingGrooveMinBufferWidth) * 2
         : GetContainerORingInfo(oringNum - 1)[1][1] + 2 * oRingGrooveMinBufferWidth
     )
-    let (oring = GetNextLargestORingByID(desiredID, series=oRingSeries))
-    let (gland = GetORingGlandParameters(oring, clearance=oRingSurfaceClearance))
-    [ oring, gland ];
+    let (oring = GetNextLargestORingByGlandID(desiredID, series=oRingSeries, clearance=oRingSurfaceClearance, biteHeight=oRingBiteHeight, numBites=useORingBites?2:0))
+    let (bite = GetORingBiteParameters(oring, oRingBiteHeight, useORingBites?2:0))
+    let (gland = GetORingGlandParameters(oring, clearance=oRingSurfaceClearance, bite=bite))
+    [ oring, gland, bite ];
 
 // Calculate the radius of the top part of the container from the OD of the largest O-ring groove
 containerTopRadius = GetContainerORingInfo(numORings - 1)[1][1] / 2 + oRingGrooveMinBufferWidth;
@@ -104,7 +108,7 @@ module Container() {
         // O-ring glands
         translate([0, 0, containerOuterHeight])
             for (i = [0 : numORings - 1])
-                ORingGland(GetContainerORingInfo(i)[1]);
+                ORingGland(GetContainerORingInfo(i)[1], bite=useORingBites?GetContainerORingInfo(i)[2]:undef);
     };
 };
 
@@ -123,6 +127,11 @@ module Cap() {
             angle=45,
             leadin=1
         );
+    // O-ring bites
+    if (useORingBites)
+        for (i = [0 : numORings-1])
+            translate([0, 0, capTopHeight])
+                ORingBite(GetContainerORingInfo(i)[2]);
 };
 
 //Container();

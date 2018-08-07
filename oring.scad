@@ -396,36 +396,93 @@ function ORingToStr(row) = str(
         "mm)"
     );
 
+// Parameters for an extra ring inside the gland and on the opposing face to bite into the o-ring
+// May help get a better seal on 3d-printed parts
+// height = how thick the bite should be; numBites = how many bites there are, 2 if on both gland and mating surface
+// Returns: [ biteID, biteOD, biteHeight, numBites ]
+function GetORingBiteParameters(oring, height = 0.2, numBites = 2) =
+    let (biteCenterDiameter = oring[5] + oring[7])
+    let (biteWidth = min(oring[7] / 3, 1))
+    [ biteCenterDiameter - biteWidth, biteCenterDiameter + biteWidth, height, numBites ];
+
 // Get parameters for a basic o-ring sealing gland.
 // For argument values, see https://www.marcorubber.com/o-ring-groove-design-considerations.htm
+// compression = percent compression of o-ring
+// stretch = amount o-ring should be stretched
+// fill = percent fill of gland by o-ring
+// clearance = clearance between mating plates
+// centered = whether o-ring should be centered in gland; if false, o-ring hugs the ID, should be false for nonzero stretch
+// bite = o-ring bite params
 // Returned values are a vector containing:
 // [ grooveID, grooveOD, grooveDepth ]
-function GetORingGlandParameters(oring, compression = 0.2, stretch = 0, fill = 0.75, clearance = 0) =
-    let (grooveID = oring[5] * (1 + stretch))
+function GetORingGlandParameters(oring, compression = 0.2, stretch = 0, fill = 0.75, clearance = 0, centered = true, bite = [0,0,0,0]) =
+    let (desiredRingID = oring[5] * (1 + stretch))
     let (grooveDepth = oring[7] * (1 - compression) - clearance)
-    let (grooveWidth = PI * pow(oring[7] / 2, 2) / fill / grooveDepth)
-    [
-        grooveID,
-        grooveID + grooveWidth * 2,
-        grooveDepth
-    ];
+    let (biteArea = (bite[1] - bite[0]) / 2 * bite[2] * bite[3])
+    let (grooveWidth = (PI * pow(oring[7] / 2, 2) / fill + biteArea) / grooveDepth)
+    centered ?
+        [
+            desiredRingID + oring[7] - grooveWidth,
+            desiredRingID + oring[7] + grooveWidth,
+            grooveDepth
+        ]
+    :
+        [
+            desiredRingID,
+            grooveID + grooveWidth * 2,
+            grooveDepth
+        ];
+        
+function GetNextLargestORingByGlandID(
+    minIDmm, series = -1, minCSmm = 0, maxCSmm = 100,
+    compression = 0.2, stretch = 0, fill = 0.75, clearance = 0, centered = true,
+    biteHeight = 0.2, numBites = 0
+) =
+    let (oringsWithGlands = [ for (row = oRingTable) concat(row, [GetORingGlandParameters(
+        row,
+        compression, stretch, fill, clearance, centered,
+        GetORingBiteParameters(row, biteHeight, numBites)
+    )]) ])
+    let (candidates = [ for (row = oringsWithGlands) if (
+        row[9][0] >= minIDmm
+        && row[7] >= minCSmm
+        && row[7] <= maxCSmm
+        && (series == -1 || floor(row[0] / 100) == series)
+    ) row ])
+    let (minID = min([ for (row = candidates) row[9][0] ]))
+    let (candidatesWithMinID = [ for (row = candidates) if (row[9][0] == minID) row ])
+    let (minCS = min([ for (row = candidatesWithMinID) row[7] ]))
+    let (candidatesWithMinCS = [ for (row = candidatesWithMinID) if (row[7] == minCS) row ])
+    candidatesWithMinCS[0];
 
 // Produces the shape of a basic o-ring sealing gland.  Should be subtracted from a shape with difference().
-module ORingGland(glandparams, chamferFrac = 0.2) {
+module ORingGland(glandparams, chamferFrac = 0.2, bite=undef) {
     grooveID = glandparams[0];
     grooveOD = glandparams[1];
     grooveWidth = (grooveOD - grooveID) / 2;
     grooveDepth = glandparams[2];
     chamfer = chamferFrac * grooveDepth;
-    rotate_extrude()
-        translate([grooveID/2, 0])
-            polygon([
-                [-chamfer, 0],
-                [grooveWidth + chamfer, 0],
-                [grooveWidth, -chamfer],
-                [grooveWidth, -grooveDepth],
-                [0, -grooveDepth],
-                [0, -chamfer]
-            ]);
+    difference() {
+        rotate_extrude()
+            translate([grooveID/2, 0])
+                polygon([
+                    [-chamfer, 0],
+                    [grooveWidth + chamfer, 0],
+                    [grooveWidth, -chamfer],
+                    [grooveWidth, -grooveDepth],
+                    [0, -grooveDepth],
+                    [0, -chamfer]
+                ]);
+        if (bite != undef && bite[3] > 0)
+            ORingBite(bite);
+    };
+};
+
+// Produces the bite ridge; can be placed inside the gland and/or on the mating surface
+module ORingBite(bite) {
+    difference() {
+        cylinder(r=bite[1]/2, h=bite[2]);
+        cylinder(r=bite[0]/2, h=bite[2]+10);
+    };
 };
 
