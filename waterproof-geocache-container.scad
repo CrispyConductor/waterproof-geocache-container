@@ -35,6 +35,7 @@ containerTopMinThick = 2;
 extraThreadDiameterClearance = 0.6;
 
 useORingBites = true;
+useORingRetainers = true;
 
 includeDessicantPocket = true;
 dessicantPocketWallThick = 2;
@@ -66,7 +67,7 @@ clipArmContainerClearance = 0.6;
 clipDeflectionAngle = 5;
 
 // Returns O-ring information for the given o-ring number (starting at 0)
-// Return format: [ ORingData, GlandData, BiteData ]
+// Return format: [ ORingData, GlandData, BiteData, RetainerData ]
 function GetContainerORingInfo(oringNum) =
     let (desiredID =
         (oringNum <= 0)
@@ -76,7 +77,8 @@ function GetContainerORingInfo(oringNum) =
     let (oring = GetNextLargestORingByGlandID(desiredID, series=oRingSeries, clearance=oRingSurfaceClearance, biteHeight=oRingBiteHeight, numBites=useORingBites?2:0))
     let (bite = GetORingBiteParameters(oring, oRingBiteHeight, useORingBites?2:0))
     let (gland = GetORingGlandParameters(oring, clearance=oRingSurfaceClearance, bite=bite))
-    [ oring, gland, bite ];
+    let (retainer = GetORingRetainerParameters(oring))
+    [ oring, gland, bite, retainer ];
 
 // Calculate the thickness of the top part of the container from the maximum depth of any of the O-ring grooves
 containerTopThick_ord = max([ for (i = [0 : numORings - 1]) GetContainerORingInfo(i)[1][2] ]) + containerTopMinThick;
@@ -140,7 +142,7 @@ module Container() {
         // O-ring glands
         translate([0, 0, containerOuterHeight])
             for (i = [0 : numORings - 1])
-                ORingGland(GetContainerORingInfo(i)[1], bite=useORingBites?GetContainerORingInfo(i)[2]:undef);
+                ORingGland(GetContainerORingInfo(i)[1], bite=useORingBites?GetContainerORingInfo(i)[2]:undef, retainer=useORingRetainers?GetContainerORingInfo(i)[3]:undef);
         // Outer chamfer
         containerTopChamferHeight = containerTopThick * 0.75;
         if (containerTopChamferSize > 0)

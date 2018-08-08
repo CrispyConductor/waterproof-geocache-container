@@ -1,3 +1,5 @@
+use <rotate_extrude.scad>
+
 // DashNumber,ID_Inch,ID_Tolerance_Inch,CS_Inch,CS_Tolerance_Inch,ID_mm,ID_Tolerance_mm,CS_mm,CS_Tolerance_mm
 oRingTable = [
     [001,0.029,0.004,0.040,0.003,0.74,0.10,1.02,0.08],
@@ -396,6 +398,15 @@ function ORingToStr(row) = str(
         "mm)"
     );
 
+// Parameters for o-ring retaining clips in gland
+// Returns: [ topWidth, spanAngle, numRetainers ]
+function GetORingRetainerParameters(oring, numRetainers = 8, overhangFrac = 0.1, spanAngle = 12) =
+    [
+        oring[7] * (1 - overhangFrac),
+        spanAngle,
+        numRetainers
+    ];
+
 // Parameters for an extra ring inside the gland and on the opposing face to bite into the o-ring
 // May help get a better seal on 3d-printed parts
 // height = how thick the bite should be; numBites = how many bites there are, 2 if on both gland and mating surface
@@ -456,7 +467,7 @@ function GetNextLargestORingByGlandID(
     candidatesWithMinCS[0];
 
 // Produces the shape of a basic o-ring sealing gland.  Should be subtracted from a shape with difference().
-module ORingGland(glandparams, chamferFrac = 0.2, bite=undef) {
+module ORingGland(glandparams, chamferFrac = 0.2, bite=undef, retainer=undef) {
     grooveID = glandparams[0];
     grooveOD = glandparams[1];
     grooveWidth = (grooveOD - grooveID) / 2;
@@ -476,6 +487,23 @@ module ORingGland(glandparams, chamferFrac = 0.2, bite=undef) {
         if (bite != undef && bite[3] > 0)
             translate([0, 0, -grooveDepth])
                 ORingBite(bite);
+        if (retainer != undef && retainer[2] > 0)
+            for (i = [0 : retainer[2] - 1])
+                rotate([0, 0, i * (360 / retainer[2]) - retainer[1]/2])
+                    rotate_extrude2(angle=retainer[1])
+                        union() {
+                            retainerClipWidth = (grooveWidth - retainer[0]) / 2;
+                            polygon([
+                                [0, 0],
+                                [grooveID/2 + retainerClipWidth, 0],
+                                [0, -grooveID/2 - retainerClipWidth]
+                            ]);
+                            polygon([
+                                [grooveOD/2 - retainerClipWidth, 0],
+                                [grooveOD/2 + 10, 0],
+                                [grooveOD/2 + 10, -retainerClipWidth - 10]
+                            ]);
+                        };
     };
 };
 
