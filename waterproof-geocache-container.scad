@@ -1,49 +1,119 @@
+/* [Global] */
 
+// Part to print.  Dessicant cap is only needed if including dessicant pocket.
+part = "all"; // [container:Container,cap:Cap for Container,dessicantcap:Cap for Dessicant Pocket,all:All Parts]
 
-// Inner compartment dimensions
+/* [Main] */
+
+// Diameter of inner compartment
 compartmentDiameter = 25;
+
+// Height of inner compartment
 compartmentHeight = 30;
+
+// Number of concentric o-ring seals
+numORings = 2; // [1, 2, 3, 4]
+
+// Whether or not to include external cap clips.  These can help prevent the lid from backing off due to vibration, but increase the unused size of the container.
+includeClips_str = "yes";
+
+// Whether or not to include a cavity in the cap for dessicant to be added
+includeDessicantPocket_str = "yes"; // [yes, no]
+includeDessicantPocket = includeDessicantPocket_str == "yes";
+
+// Thickness/height of the top of the cap
+capTopHeight = 7;
+
+
+/* [Screw Thread] */
+
+// Extra clearance to add to the diameter of threaded connections
+extraThreadDiameterClearance = 0.6;
+
+// Metric thread pitch for main container thread
+containerThreadPitch = 3;
+
+// Minimum number of screw threads engaged
+containerThreadNumTurnsMin = 5;
+
+
+/* [O-Rings] */
+
+// Series number for o-rings to use.  Larger numbers are larger o-rings.
+oRingSeries = 1; // [0, 1, 2, 3, 4]
+
+// Whether to include raised protrusions that dig into the o-rings.  This can increase the sealing ability on 3d-printed objects, but may cause additional wear to the o-rings.
+useORingBites_str = "yes"; // [yes, no]
+useORingBites = useORingBites_str == "yes";
+
+// Whether to include retaining clips for the o-rings.  These help the o-rings not fall out when opened, but may cause additional wear.
+useORingRetainers_str = "yes"; // [yes, no]
+useORingRetainers = useORingRetainers_str == "yes";
+
+// Amount of space to leave on each side of the o-ring grooves
+oRingGrooveMinBufferWidth = 2;
+
+// Clearance gap between lid and container to use for o-ring gland calculations
+oRingSurfaceClearance = 0.2;
+
+// Height of the raised surface to dig into the o-ring
+oRingBiteHeight = 0.2;
+
+
+/* [Labels] */
+
+// Whether or not to include a label for the dessicant cavity
+includeDessicantLabel_str = "yes"; // [yes, no]
+includeDessicantLabel = includeDessicantLabel_str == "yes";
+
+// Text on top of cap
+topLabel = "GEOCACHE CONTAINER";
+
+// Text on bottom of container
+bottomLabel = "GEOCACHE CONTAINER";
+
+// Text on side of container
+sideLabel = "GEOCACHE CONTAINER";
+
+
+/* [Clips] */
+
+// Number of external cap clips
+numClips_cfg = 6;
+numClips = includeClips_str == "yes" ? numClips_cfg : 0;
+
+// Angle of deflection for the clips when container is opened and closed.  Higher values result in a more positive lock, but can make the clips prone to breaking off.
+clipDeflectionAngle = 5;
+
+// Thickness of the clip arm
+clipArmThick = 2;
+
+// Minimum length of the clip arm, to the start of the clip protrusion.
+clipArmMinLength = 15;
+
+// Gap between clips and outer container wall
+clipArmContainerClearance = 0.6;
+
+// Minimum number of thread turns that must be engaged before the clips touch the container body.
+minThreadEngagementBeforeClips = 1;
+
+
+/* [Misc] */
 
 // Thickness of the container wall
 wallThick = 3;
 
-// Thickness of the container floor
-floorThick = wallThick;
-
-// Metric thread pitch for main thread
-containerThreadPitch = 3;
-
-// Number of full turns of the thread
-containerThreadNumTurnsMin = 5;
-
-// Thickness of the top of the cap
-capTopHeight = 7;
-
-// Amount of space to leave on each side of the o-ring groove
-oRingGrooveMinBufferWidth = 2;
-
-// Series number for orings to use
-oRingSeries = 1;
-
-// Number of sealing rings
-numORings = 2;
-
 // Minimum thickness of any part of the container top overhang, measured from the bottom of the deepest o-ring groove
 containerTopMinThick = 2;
 
-// Extra clearance to add to the diameter of threaded connection
-extraThreadDiameterClearance = 0.6;
-
-useORingBites = true;
-useORingRetainers = true;
-
-includeDessicantPocket = true;
-includeDessicantLabel = true;
+// Minimum thickness of the wall of the dessicant pocket/main screw
 dessicantPocketWallThick = 2;
 
-topLabel = "GEOCACHE CONTAINER";
-bottomLabel = "GEOCACHE CONTAINER";
-sideLabel = "GEOCACHE CONTAINER";
+// Number of thread turns for the dessicant pocket cap
+dessicantThreadNumTurns = 2;
+
+
+/* [Hidden] */
 
 $fa = 3;
 $fs = 0.2;
@@ -54,6 +124,9 @@ use <knurl.scad>
 use <rotate_extrude.scad>
 use <write/Write.scad>
 
+// Thickness of the container floor
+floorThick = wallThick;
+
 compartmentRadius = compartmentDiameter / 2;
 
 containerOuterRadius = compartmentRadius + 2 * wallThick;
@@ -61,16 +134,7 @@ containerInnerRadius = compartmentRadius;
 
 containerThreadOuterDiameter = containerInnerRadius * 2 + containerThreadPitch * 0.3125 * 2;
 
-oRingSurfaceClearance = 0.2;
-
-oRingBiteHeight = 0.2;
-
-numClips = 6;
 clipWidth = min(10, 2*PI*containerOuterRadius/numClips/2, 2*PI*containerOuterRadius/20);
-clipArmThick = 2;
-clipArmMinLength = 15; // length to the start of the clip protrusion; actually length is containerTopThick
-clipArmContainerClearance = 0.6;
-clipDeflectionAngle = 5;
 
 // Returns O-ring information for the given o-ring number (starting at 0)
 // Return format: [ ORingData, GlandData, BiteData, RetainerData ]
@@ -98,7 +162,6 @@ clipArmLengthOffset = -clipProtrusion * (3/4);
 clipPointHeight = 1;
 clipArmFullLength = containerTopThick + 2 * clipProtrusion + clipPointHeight - clipArmContainerClearance + clipArmLengthOffset;
 
-minThreadEngagementBeforeClips = 1;
 // Minimal number of threads on cap screw 
 containerThreadNumTurns_clips = (clipArmFullLength - capThreadLengthOffset) / containerThreadPitch + 1 + minThreadEngagementBeforeClips;
 
@@ -190,15 +253,17 @@ capThreadLength = containerThreadLength + capThreadLengthOffset;
 capThreadDiameter = containerThreadOuterDiameter-extraThreadDiameterClearance;
 dessicantPocketHeight = capTopHeight + capThreadLength - floorThick;
 dessicantThreadDiameter = capThreadDiameter - 2*containerThreadPitch - 2*dessicantPocketWallThick;
-dessicantThreadNumTurns = 2;
 dessicantThreadLength = dessicantThreadNumTurns * containerThreadPitch;
 dessicantCapHeight = dessicantThreadLength;
 dessicantPocketCapShoulder = 1;
 dessicantPocketInternalRadius = dessicantThreadDiameter/2-containerThreadPitch-dessicantPocketCapShoulder;
 
+// Extra cap radius to add when clips are enabled
+extraCapRadiusWithClips = 2;
+
+capRadius = (numClips > 0) ? containerTopRadius + clipArmContainerClearance + clipArmThick + extraCapRadiusWithClips : containerTopRadius;
+
 module Cap() {
-    extraCapRadiusWithClips = 2;
-    capRadius = (numClips > 0) ? containerTopRadius + clipArmContainerClearance + clipArmThick + extraCapRadiusWithClips : containerTopRadius;
     
     difference() {
         union() {
@@ -343,6 +408,24 @@ module DessicantCap() {
     };
 };
 
-Container();
+module print_part() {
+    if (part == "container")
+        Container();
+    else if (part == "cap")
+        Cap();
+    else if (part == "dessicantcap")
+        DessicantCap();
+    else if (part == "all")
+        union() {
+            translate([-containerTopRadius-1, 0, 0])
+                Container();
+            translate([capRadius + 2, 0, 0])
+                Cap();
+        };
+};
+
+print_part();
+
+//Container();
 //Cap();
 //DessicantCap();
