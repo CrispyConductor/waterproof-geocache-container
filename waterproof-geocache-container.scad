@@ -38,6 +38,7 @@ useORingBites = true;
 useORingRetainers = true;
 
 includeDessicantPocket = true;
+includeDessicantLabel = true;
 dessicantPocketWallThick = 2;
 
 $fa = 3;
@@ -47,6 +48,7 @@ use <threads.scad>
 use <oring.scad>
 use <knurl.scad>
 use <rotate_extrude.scad>
+use <write/Write.scad>
 
 compartmentRadius = compartmentDiameter / 2;
 
@@ -203,6 +205,19 @@ module Cap() {
                             angle=45
                         );
                 };
+                
+        // Dessicant label
+        if (includeDessicantPocket && includeDessicantLabel)
+            writecylinder(
+                text = "DESSICANT",
+                where = [0, 0, 0],
+                radius = capThreadDiameter/2 - containerThreadPitch,
+                height = capThreadLength + capTopHeight,
+                face = "top",
+                h = dessicantPocketWallThick,
+                middle = -dessicantPocketWallThick,
+                space = 2
+            );
     };
     
     // Knurls
@@ -290,6 +305,6 @@ module DessicantCap() {
     };
 };
 
-Container();
-//Cap();
+//Container();
+Cap();
 //DessicantCap();
