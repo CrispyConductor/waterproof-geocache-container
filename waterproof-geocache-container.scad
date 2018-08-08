@@ -41,6 +41,10 @@ includeDessicantPocket = true;
 includeDessicantLabel = true;
 dessicantPocketWallThick = 2;
 
+topLabel = "GEOCACHE CONTAINER";
+bottomLabel = "GEOCACHE CONTAINER";
+sideLabel = "GEOCACHE CONTAINER";
+
 $fa = 3;
 $fs = 0.2;
 
@@ -115,6 +119,7 @@ for (i = [0 : numORings - 1])
     echo(ORingToStr(GetContainerORingInfo(i)[0]));
 
 module Container() {
+    topOverhangSupportZ = containerOuterHeight-containerTopThick-(containerTopRadius-containerOuterRadius);
     difference() {
         union() {
             // Main outer cylinder
@@ -123,7 +128,7 @@ module Container() {
             translate([0, 0, containerOuterHeight - containerTopThick])
                 cylinder(h=containerTopThick, r=containerTopRadius);
             // Support for overhang
-            translate([0, 0, containerOuterHeight-containerTopThick-(containerTopRadius-containerOuterRadius)])
+            translate([0, 0, topOverhangSupportZ])
                 cylinder(r1=containerOuterRadius, r2=containerTopRadius, h=containerTopRadius-containerOuterRadius);
         };
         // Inner cutout
@@ -156,7 +161,28 @@ module Container() {
                             [-containerTopChamferSize, 0],
                             [0, -containerTopChamferHeight]
                         ]);
-                        
+        // Bottom label
+        if (len(bottomLabel) > 0)
+            writecylinder(
+                text = bottomLabel,
+                where = [0, 0, 0],
+                radius = containerOuterRadius,
+                height = containerOuterHeight,
+                face = "bottom",
+                h = containerOuterRadius / 5,
+                space = 1.5
+            );
+        // Side label
+        if (len(sideLabel) > 0)
+            writecylinder(
+                text = sideLabel,
+                where = [0, 0, 0],
+                radius = containerOuterRadius,
+                height = topOverhangSupportZ,
+                h = containerOuterRadius / 5,
+                space = 1.5,
+                rotate = 15
+            );
     };
 };
 
@@ -178,6 +204,8 @@ module Cap() {
         union() {
             // Base
             cylinder(h=capTopHeight, r=capRadius);
+            // Knurls
+            knurl(capTopHeight, capRadius*2);
              // Threads
             translate([0, 0, capTopHeight])
                 metric_thread(
@@ -218,10 +246,20 @@ module Cap() {
                 middle = -dessicantPocketWallThick,
                 space = 2
             );
+        
+        // Top label
+        if (len(topLabel) > 0)
+            writecylinder(
+                text = topLabel,
+                where = [0, 0, 0],
+                radius = capRadius,
+                height = capTopHeight,
+                face = "bottom",
+                h = capRadius / 5,
+                space = 1.5
+            );
     };
     
-    // Knurls
-    knurl(capTopHeight, capRadius*2);
     // O-ring bites
     if (useORingBites)
         for (i = [0 : numORings-1])
@@ -305,6 +343,6 @@ module DessicantCap() {
     };
 };
 
-//Container();
-Cap();
+Container();
+//Cap();
 //DessicantCap();
