@@ -1,7 +1,7 @@
 
 
 // Inner compartment dimensions
-compartmentDiameter = 50;
+compartmentDiameter = 25;
 compartmentHeight = 30;
 
 // Thickness of the container wall
@@ -18,7 +18,7 @@ containerThreadNumTurns = 5;
 containerThreadLength = containerThreadNumTurns * containerThreadPitch;
 
 // Thickness of the top of the cap
-capTopHeight = 10;
+capTopHeight = 7;
 
 // Amount of space to leave on each side of the o-ring groove
 oRingGrooveMinBufferWidth = 2;
@@ -85,6 +85,7 @@ containerTopThick_ord = max([ for (i = [0 : numORings - 1]) GetContainerORingInf
 containerTopThick = (numClips > 0) ? max(containerTopThick_ord, clipArmMinLength) : containerTopThick_ord;
 
 clipProtrusion = (containerTopThick * tan(clipDeflectionAngle) + clipArmContainerClearance / cos(clipDeflectionAngle)) / (1 - tan(clipDeflectionAngle));
+clipArmLengthOffset = -clipProtrusion / 3;
 
 // Calculate the radius of the top part of the container from the OD of the largest O-ring groove
 containerTopRadius_ord = GetContainerORingInfo(numORings - 1)[1][1] / 2 + oRingGrooveMinBufferWidth;
@@ -187,7 +188,7 @@ module Cap() {
     // Clip shroud and clips
     clipPointHeight = 1;
     clipShroudGapClearance = 1;
-    clipArmFullLength = containerTopThick + 2 * clipProtrusion + clipPointHeight;
+    clipArmFullLength = containerTopThick + 2 * clipProtrusion + clipPointHeight - clipArmContainerClearance + clipArmLengthOffset;
     clipArmOffsetX = containerTopRadius + clipArmContainerClearance;
     clipSpanAngle = clipWidth / (2 * PI * clipArmOffsetX) * 360;
     clipShroudGapSpanAngle = (clipWidth + 2 * clipShroudGapClearance) / (2 * PI * clipArmOffsetX) * 360;
@@ -252,7 +253,7 @@ module DessicantCap() {
         translate([-slotWidth/2, -slotLength/2, dessicantCapHeight-slotDepth])
             cube([slotWidth, slotLength, 1000]);
         // Perforations
-        for (r = [dessicantPocketInternalRadius-perforationDiameter : -perforationSpacing : perforationSpacing]) {
+        for (r = [dessicantPocketInternalRadius-perforationDiameter : -perforationSpacing : perforationSpacing/2]) {
             numPerforations = floor(2*PI*r / perforationSpacing);
             startAngle = rands(-360, 0, 1)[0];
             for (a = [startAngle : 360/numPerforations : startAngle+359])
@@ -264,5 +265,5 @@ module DessicantCap() {
 };
 
 //Container();
-//Cap();
-DessicantCap();
+Cap();
+//DessicantCap();
