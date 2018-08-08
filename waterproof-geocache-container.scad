@@ -85,7 +85,7 @@ containerTopThick = (numClips > 0) ? max(containerTopThick_ord, clipArmMinLength
 capThreadLengthOffset = -1;
 
 clipProtrusion = (containerTopThick * tan(clipDeflectionAngle) + clipArmContainerClearance / cos(clipDeflectionAngle)) / (1 - tan(clipDeflectionAngle));
-clipArmLengthOffset = -clipProtrusion / 3;
+clipArmLengthOffset = -clipProtrusion * (3/4);
 
 clipPointHeight = 1;
 clipArmFullLength = containerTopThick + 2 * clipProtrusion + clipPointHeight - clipArmContainerClearance + clipArmLengthOffset;
@@ -98,9 +98,12 @@ containerThreadNumTurns = max(containerThreadNumTurnsMin, numClips > 0 ? contain
 containerThreadLength = containerThreadNumTurns * containerThreadPitch;
 containerOuterHeight = compartmentHeight + floorThick + containerThreadLength;
 
+containerTopChamferSize = numClips > 0 ? clipProtrusion : 0;
+
 // Calculate the radius of the top part of the container from the OD of the largest O-ring groove
-containerTopRadius_ord = GetContainerORingInfo(numORings - 1)[1][1] / 2 + oRingGrooveMinBufferWidth;
-containerTopRadius_clip = containerOuterRadius + clipProtrusion - clipArmContainerClearance;
+containerTopRadius_ord = GetContainerORingInfo(numORings - 1)[1][1] / 2 + oRingGrooveMinBufferWidth + containerTopChamferSize;
+containerTopRadius_clip = containerOuterRadius + clipProtrusion;
+// Use the larger of the two minimum radii
 containerTopRadius = max(containerTopRadius_ord, numClips > 0 ? containerTopRadius_clip : 0);
 
 // Print out o-ring info
@@ -138,6 +141,18 @@ module Container() {
         translate([0, 0, containerOuterHeight])
             for (i = [0 : numORings - 1])
                 ORingGland(GetContainerORingInfo(i)[1], bite=useORingBites?GetContainerORingInfo(i)[2]:undef);
+        // Outer chamfer
+        containerTopChamferHeight = containerTopThick * 0.75;
+        if (containerTopChamferSize > 0)
+            translate([0, 0, containerOuterHeight])
+                rotate_extrude()
+                    translate([containerTopRadius, 0])
+                        polygon([
+                            [0, 0],
+                            [-containerTopChamferSize, 0],
+                            [0, -containerTopChamferHeight]
+                        ]);
+                        
     };
 };
 
@@ -273,6 +288,6 @@ module DessicantCap() {
     };
 };
 
-//Container();
-Cap();
+Container();
+//Cap();
 //DessicantCap();
