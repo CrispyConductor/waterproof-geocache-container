@@ -14,8 +14,7 @@ floorThick = wallThick;
 containerThreadPitch = 3;
 
 // Number of full turns of the thread
-containerThreadNumTurns = 5;
-containerThreadLength = containerThreadNumTurns * containerThreadPitch;
+containerThreadNumTurnsMin = 5;
 
 // Thickness of the top of the cap
 capTopHeight = 7;
@@ -50,7 +49,6 @@ use <rotate_extrude.scad>
 
 compartmentRadius = compartmentDiameter / 2;
 
-containerOuterHeight = compartmentHeight + floorThick + containerThreadLength;
 containerOuterRadius = compartmentRadius + 2 * wallThick;
 containerInnerRadius = compartmentRadius;
 
@@ -84,8 +82,25 @@ function GetContainerORingInfo(oringNum) =
 containerTopThick_ord = max([ for (i = [0 : numORings - 1]) GetContainerORingInfo(i)[1][2] ]) + containerTopMinThick;
 containerTopThick = (numClips > 0) ? max(containerTopThick_ord, clipArmMinLength) : containerTopThick_ord;
 
+capThreadLengthOffset = -1;
+
 clipProtrusion = (containerTopThick * tan(clipDeflectionAngle) + clipArmContainerClearance / cos(clipDeflectionAngle)) / (1 - tan(clipDeflectionAngle));
 clipArmLengthOffset = -clipProtrusion / 3;
+
+clipPointHeight = 1;
+clipArmFullLength = containerTopThick + 2 * clipProtrusion + clipPointHeight - clipArmContainerClearance + clipArmLengthOffset;
+
+minThreadEngagementBeforeClips = 1;
+// Minimal number of threads on cap screw 
+containerThreadNumTurns_clips = (clipArmFullLength - capThreadLengthOffset) / containerThreadPitch + 1 + minThreadEngagementBeforeClips;
+
+containerThreadNumTurns = max(containerThreadNumTurnsMin, containerThreadNumTurns_clips);
+containerThreadLength = containerThreadNumTurns * containerThreadPitch;
+containerOuterHeight = compartmentHeight + floorThick + containerThreadLength;
+
+
+
+
 
 // Calculate the radius of the top part of the container from the OD of the largest O-ring groove
 containerTopRadius_ord = GetContainerORingInfo(numORings - 1)[1][1] / 2 + oRingGrooveMinBufferWidth;
@@ -130,7 +145,7 @@ module Container() {
     };
 };
 
-capThreadLength = containerThreadLength - 1;
+capThreadLength = containerThreadLength + capThreadLengthOffset;
 capThreadDiameter = containerThreadOuterDiameter-extraThreadDiameterClearance;
 dessicantPocketHeight = capTopHeight + capThreadLength - floorThick;
 dessicantThreadDiameter = capThreadDiameter - 2*containerThreadPitch - 2*dessicantPocketWallThick;
@@ -186,9 +201,7 @@ module Cap() {
                 ORingBite(GetContainerORingInfo(i)[2]);
     
     // Clip shroud and clips
-    clipPointHeight = 1;
     clipShroudGapClearance = 1;
-    clipArmFullLength = containerTopThick + 2 * clipProtrusion + clipPointHeight - clipArmContainerClearance + clipArmLengthOffset;
     clipArmOffsetX = containerTopRadius + clipArmContainerClearance;
     clipSpanAngle = clipWidth / (2 * PI * clipArmOffsetX) * 360;
     clipShroudGapSpanAngle = (clipWidth + 2 * clipShroudGapClearance) / (2 * PI * clipArmOffsetX) * 360;
@@ -264,6 +277,6 @@ module DessicantCap() {
     };
 };
 
-//Container();
-Cap();
+Container();
+//Cap();
 //DessicantCap();
