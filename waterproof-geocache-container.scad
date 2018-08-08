@@ -94,18 +94,14 @@ minThreadEngagementBeforeClips = 1;
 // Minimal number of threads on cap screw 
 containerThreadNumTurns_clips = (clipArmFullLength - capThreadLengthOffset) / containerThreadPitch + 1 + minThreadEngagementBeforeClips;
 
-containerThreadNumTurns = max(containerThreadNumTurnsMin, containerThreadNumTurns_clips);
+containerThreadNumTurns = max(containerThreadNumTurnsMin, numClips > 0 ? containerThreadNumTurns_clips : 0);
 containerThreadLength = containerThreadNumTurns * containerThreadPitch;
 containerOuterHeight = compartmentHeight + floorThick + containerThreadLength;
-
-
-
-
 
 // Calculate the radius of the top part of the container from the OD of the largest O-ring groove
 containerTopRadius_ord = GetContainerORingInfo(numORings - 1)[1][1] / 2 + oRingGrooveMinBufferWidth;
 containerTopRadius_clip = containerOuterRadius + clipProtrusion - clipArmContainerClearance;
-containerTopRadius = max(containerTopRadius_ord, containerTopRadius_clip);
+containerTopRadius = max(containerTopRadius_ord, numClips > 0 ? containerTopRadius_clip : 0);
 
 // Print out o-ring info
 for (i = [0 : numORings - 1])
@@ -226,7 +222,7 @@ module Cap() {
                     for (i = [0 : numClips - 1])
                         rotate([0, 0, i * clipAngleSpacing - clipShroudGapSpanAngle/2])
                             rotate_extrude2(angle=clipShroudGapSpanAngle)
-                                square([1000, 1000]);
+                                square([capRadius+1, clipArmFullLength+1]);
                 };
                 
                 // Clips
@@ -277,6 +273,6 @@ module DessicantCap() {
     };
 };
 
-Container();
-//Cap();
+//Container();
+Cap();
 //DessicantCap();
