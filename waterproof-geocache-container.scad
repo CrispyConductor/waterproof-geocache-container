@@ -421,6 +421,9 @@ module print_part() {
                 Container();
             translate([capRadius + 2, 0, 0])
                 Cap();
+            if (includeDessicantPocket)
+                translate([0, max(containerTopRadius + 1, capRadius + 2), 0])
+                    DessicantCap();
         };
 };
 
