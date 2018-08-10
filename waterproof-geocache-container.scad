@@ -1,7 +1,7 @@
 /* [Global] */
 
-// Part to print.  Dessicant cap is only needed if including dessicant pocket.
-part = "all"; // [container:Container,cap:Cap for Container,dessicantcap:Cap for Dessicant Pocket,all:All Parts]
+// Part to print.  Desiccant cap is only needed if including desiccant pocket.
+part = "all"; // [container:Container,cap:Cap for Container,desiccantcap:Cap for Desiccant Pocket,all:All Parts]
 
 /* [Main] */
 
@@ -17,9 +17,9 @@ numORings = 2; // [1, 2, 3, 4]
 // Whether or not to include external cap clips.  These can help prevent the lid from backing off due to vibration, but increase the unused size of the container.
 includeClips_str = "yes";
 
-// Whether or not to include a cavity in the cap for dessicant to be added
-includeDessicantPocket_str = "yes"; // [yes, no]
-includeDessicantPocket = includeDessicantPocket_str == "yes";
+// Whether or not to include a cavity in the cap for desiccant to be added
+includeDesiccantPocket_str = "yes"; // [yes, no]
+includeDesiccantPocket = includeDesiccantPocket_str == "yes";
 
 // Thickness/height of the top of the cap
 capTopHeight = 7;
@@ -62,9 +62,9 @@ oRingBiteHeight = 0.2;
 
 /* [Labels] */
 
-// Whether or not to include a label for the dessicant cavity
-includeDessicantLabel_str = "yes"; // [yes, no]
-includeDessicantLabel = includeDessicantLabel_str == "yes";
+// Whether or not to include a label for the desiccant cavity
+includeDesiccantLabel_str = "yes"; // [yes, no]
+includeDesiccantLabel = includeDesiccantLabel_str == "yes";
 
 // Whether or not to include the o-ring numbers on the inner bottom of the container
 includeORingLabel_str = "yes"; // [yes, no]
@@ -113,11 +113,11 @@ wallThick = 3;
 // Minimum thickness of any part of the container top overhang, measured from the bottom of the deepest o-ring groove
 containerTopMinThick = 2;
 
-// Minimum thickness of the wall of the dessicant pocket/main screw
-dessicantPocketWallThick = 2;
+// Minimum thickness of the wall of the desiccant pocket/main screw
+desiccantPocketWallThick = 2;
 
-// Number of thread turns for the dessicant pocket cap
-dessicantThreadNumTurns = 2;
+// Number of thread turns for the desiccant pocket cap
+desiccantThreadNumTurns = 2;
 
 
 /* [Hidden] */
@@ -274,12 +274,12 @@ module Container() {
 
 capThreadLength = containerThreadLength + capThreadLengthOffset;
 capThreadDiameter = containerThreadOuterDiameter-extraThreadDiameterClearance;
-dessicantPocketHeight = capTopHeight + capThreadLength - floorThick;
-dessicantThreadDiameter = capThreadDiameter - 2*containerThreadPitch - 2*dessicantPocketWallThick;
-dessicantThreadLength = dessicantThreadNumTurns * containerThreadPitch;
-dessicantCapHeight = dessicantThreadLength;
-dessicantPocketCapShoulder = 1;
-dessicantPocketInternalRadius = dessicantThreadDiameter/2-containerThreadPitch-dessicantPocketCapShoulder;
+desiccantPocketHeight = capTopHeight + capThreadLength - floorThick;
+desiccantThreadDiameter = capThreadDiameter - 2*containerThreadPitch - 2*desiccantPocketWallThick;
+desiccantThreadLength = desiccantThreadNumTurns * containerThreadPitch;
+desiccantCapHeight = desiccantThreadLength;
+desiccantPocketCapShoulder = 1;
+desiccantPocketInternalRadius = desiccantThreadDiameter/2-containerThreadPitch-desiccantPocketCapShoulder;
 
 // Extra cap radius to add when clips are enabled
 extraCapRadiusWithClips = 2;
@@ -306,32 +306,32 @@ module Cap() {
                 );
         };
         
-        // Dessicant pocket
-        dessicantPocketZ = floorThick;
-        if (includeDessicantPocket)
-            translate([0, 0, dessicantPocketZ])
+        // Desiccant pocket
+        desiccantPocketZ = floorThick;
+        if (includeDesiccantPocket)
+            translate([0, 0, desiccantPocketZ])
                 union() {
-                    cylinder(r=dessicantPocketInternalRadius, h=1000);
-                    translate([0, 0, dessicantPocketHeight - dessicantThreadLength])
+                    cylinder(r=desiccantPocketInternalRadius, h=1000);
+                    translate([0, 0, desiccantPocketHeight - desiccantThreadLength])
                         metric_thread(
-                            diameter=dessicantThreadDiameter,
+                            diameter=desiccantThreadDiameter,
                             pitch=containerThreadPitch,
-                            length=dessicantThreadLength + containerThreadPitch,
+                            length=desiccantThreadLength + containerThreadPitch,
                             internal=true,
                             angle=45
                         );
                 };
                 
-        // Dessicant label
-        if (includeDessicantPocket && includeDessicantLabel)
+        // Desiccant label
+        if (includeDesiccantPocket && includeDesiccantLabel)
             writecylinder(
-                text = "DESSICANT",
+                text = "DESICCANT",
                 where = [0, 0, 0],
                 radius = capThreadDiameter/2 - containerThreadPitch,
                 height = capThreadLength + capTopHeight,
                 face = "top",
-                h = dessicantPocketWallThick,
-                middle = -dessicantPocketWallThick,
+                h = desiccantPocketWallThick,
+                middle = -desiccantPocketWallThick,
                 space = 2
             );
         
@@ -401,26 +401,26 @@ module Cap() {
             };
 };
 
-module DessicantCap() {
+module DesiccantCap() {
     perforationDiameter = 1.5;
     perforationSpacing = perforationDiameter * 3;
     difference() {
         // Body of cap
         metric_thread(
-            diameter=dessicantThreadDiameter-extraThreadDiameterClearance,
+            diameter=desiccantThreadDiameter-extraThreadDiameterClearance,
             pitch=containerThreadPitch,
-            length=dessicantCapHeight,
+            length=desiccantCapHeight,
             internal=false,
             angle=45
         );
         // Slot for turning
-        slotWidth = min(3, dessicantThreadDiameter/5);
-        slotLength = (dessicantThreadDiameter - containerThreadPitch*2) * 0.6;
-        slotDepth = dessicantCapHeight * 0.7;
-        translate([-slotWidth/2, -slotLength/2, dessicantCapHeight-slotDepth])
+        slotWidth = min(3, desiccantThreadDiameter/5);
+        slotLength = (desiccantThreadDiameter - containerThreadPitch*2) * 0.6;
+        slotDepth = desiccantCapHeight * 0.7;
+        translate([-slotWidth/2, -slotLength/2, desiccantCapHeight-slotDepth])
             cube([slotWidth, slotLength, 1000]);
         // Perforations
-        for (r = [dessicantPocketInternalRadius-perforationDiameter : -perforationSpacing : perforationSpacing/2]) {
+        for (r = [desiccantPocketInternalRadius-perforationDiameter : -perforationSpacing : perforationSpacing/2]) {
             numPerforations = floor(2*PI*r / perforationSpacing);
             startAngle = rands(-360, 0, 1)[0];
             for (a = [startAngle : 360/numPerforations : startAngle+359])
@@ -436,17 +436,17 @@ module print_part() {
         Container();
     else if (part == "cap")
         Cap();
-    else if (part == "dessicantcap")
-        DessicantCap();
+    else if (part == "desiccantcap")
+        DesiccantCap();
     else if (part == "all")
         union() {
             translate([-containerTopRadius-1, 0, 0])
                 Container();
             translate([capRadius + 2, 0, 0])
                 Cap();
-            if (includeDessicantPocket)
+            if (includeDesiccantPocket)
                 translate([0, max(containerTopRadius + 1, capRadius + 2), 0])
-                    DessicantCap();
+                    DesiccantCap();
         };
 };
 
@@ -454,4 +454,4 @@ print_part();
 
 //Container();
 //Cap();
-//DessicantCap();
+//DesiccantCap();
