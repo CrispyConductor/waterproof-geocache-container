@@ -87,7 +87,7 @@ numClips_cfg = 6;
 numClips = includeClips_str == "yes" ? numClips_cfg : 0;
 
 // Angle of deflection for the clips when container is opened and closed.  Higher values result in a more positive lock, but can make the clips prone to breaking off.
-clipDeflectionAngle = 5;
+clipDeflectionAngle = 3.5;
 
 // Thickness of the clip arm
 clipArmThick = 3;
