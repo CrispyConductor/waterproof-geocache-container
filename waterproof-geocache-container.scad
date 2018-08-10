@@ -66,6 +66,10 @@ oRingBiteHeight = 0.2;
 includeDessicantLabel_str = "yes"; // [yes, no]
 includeDessicantLabel = includeDessicantLabel_str == "yes";
 
+// Whether or not to include the o-ring numbers on the inner bottom of the container
+includeORingLabel_str = "yes"; // [yes, no]
+includeORingLabel = includeORingLabel_str == "yes";
+
 // Text on top of cap
 topLabel = "GEOCACHE CONTAINER";
 
@@ -181,6 +185,11 @@ containerTopRadius = max(containerTopRadius_ord, numClips > 0 ? containerTopRadi
 for (i = [0 : numORings - 1])
     echo(ORingToStr(GetContainerORingInfo(i)[0]));
 
+function getAllORingInfoString(fromIdx = 0) =
+    (fromIdx < numORings - 1) ?
+    str(GetContainerORingInfo(fromIdx)[0][0], "-", getAllORingInfoString(fromIdx+1)) :
+    str(GetContainerORingInfo(fromIdx)[0][0]);
+
 module Container() {
     topOverhangSupportZ = containerOuterHeight-containerTopThick-(containerTopRadius-containerOuterRadius);
     difference() {
@@ -245,6 +254,17 @@ module Container() {
                 h = containerOuterRadius / 5,
                 space = 1.5,
                 rotate = 15
+            );
+        // O-ring dash number label
+        if (includeORingLabel)
+            writecylinder(
+                text = getAllORingInfoString(),
+                where = [0, 0, 0],
+                radius = containerInnerRadius,
+                height = floorThick,
+                face = "top",
+                h = containerInnerRadius / 3,
+                space = 1.5
             );
     };
 };
