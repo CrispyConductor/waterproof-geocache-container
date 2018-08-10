@@ -90,7 +90,10 @@ numClips = includeClips_str == "yes" ? numClips_cfg : 0;
 clipDeflectionAngle = 5;
 
 // Thickness of the clip arm
-clipArmThick = 2;
+clipArmThick = 3;
+
+// Desired width of the clip arm
+maxClipWidth = 10;
 
 // Minimum length of the clip arm, to the start of the clip protrusion.
 clipArmMinLength = 15;
@@ -138,7 +141,7 @@ containerInnerRadius = compartmentRadius;
 
 containerThreadOuterDiameter = containerInnerRadius * 2 + containerThreadPitch * 0.3125 * 2;
 
-clipWidth = min(10, 2*PI*containerOuterRadius/numClips/2, 2*PI*containerOuterRadius/20);
+clipWidth = min(maxClipWidth, 2*PI*containerOuterRadius/numClips/2, 2*PI*containerOuterRadius/20);
 
 // Returns O-ring information for the given o-ring number (starting at 0)
 // Return format: [ ORingData, GlandData, BiteData, RetainerData ]
