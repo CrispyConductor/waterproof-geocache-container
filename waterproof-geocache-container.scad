@@ -445,7 +445,7 @@ module print_part() {
             translate([capRadius + 2, 0, 0])
                 Cap();
             if (includeDesiccantPocket)
-                translate([0, max(containerTopRadius + 1, capRadius + 2), 0])
+                translate([0, max(containerTopRadius + 1, capRadius + 2)+desiccantThreadDiameter/2, 0])
                     DesiccantCap();
         };
 };
