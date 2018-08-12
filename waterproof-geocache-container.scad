@@ -54,7 +54,7 @@ useORingRetainers = useORingRetainers_str == "yes";
 oRingGrooveMinBufferWidth = 2;
 
 // Clearance gap between lid and container to use for o-ring gland calculations
-oRingSurfaceClearance = 0.2;
+oRingSurfaceClearance = 0;
 
 // Height of the raised surface to dig into the o-ring
 oRingBiteHeight = 0.2;
