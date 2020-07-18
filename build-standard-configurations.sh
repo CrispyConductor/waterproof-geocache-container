@@ -14,7 +14,8 @@ function buildConfiguration {
 	if [ "$INCLUDECLIPS" = "no" ]; then FN="${FN}-noclips"; fi
 
 	echo "Building $FN"
-	$OPENSCAD -o "${FN}.stl" -D "part=\"all\"" -D "compartmentDiameter=$DIAMETER" -D "compartmentHeight=$HEIGHT" -D "numORings=$NUMSEALS" -D "capTopHeight=$CAPTOPHEIGHT" -D "includeClips_str=\"$INCLUDECLIPS\"" waterproof-geocache-container.scad
+	date
+	time $OPENSCAD -o "${FN}.stl" -D "part=\"all\"" -D "compartmentDiameter=$DIAMETER" -D "compartmentHeight=$HEIGHT" -D "numORings=$NUMSEALS" -D "capTopHeight=$CAPTOPHEIGHT" -D "includeClips_str=\"$INCLUDECLIPS\"" waterproof-geocache-container.scad
 }
 
 buildConfiguration small 25 30 2 7 yes
