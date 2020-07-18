@@ -54,7 +54,7 @@ useORingRetainers = useORingRetainers_str == "yes";
 oRingGrooveMinBufferWidth = 2;
 
 // Clearance gap between lid and container to use for o-ring gland calculations
-oRingSurfaceClearance = 0.2;
+oRingSurfaceClearance = 0;
 
 // Height of the raised surface to dig into the o-ring
 oRingBiteHeight = 0.2;
@@ -87,7 +87,7 @@ numClips_cfg = 6;
 numClips = includeClips_str == "yes" ? numClips_cfg : 0;
 
 // Angle of deflection for the clips when container is opened and closed.  Higher values result in a more positive lock, but can make the clips prone to breaking off.
-clipDeflectionAngle = 5;
+clipDeflectionAngle = 3.5;
 
 // Thickness of the clip arm
 clipArmThick = 3;
@@ -445,7 +445,7 @@ module print_part() {
             translate([capRadius + 2, 0, 0])
                 Cap();
             if (includeDesiccantPocket)
-                translate([0, max(containerTopRadius + 1, capRadius + 2), 0])
+                translate([0, max(containerTopRadius + 1, capRadius + 2)+desiccantThreadDiameter/2, 0])
                     DesiccantCap();
         };
 };
